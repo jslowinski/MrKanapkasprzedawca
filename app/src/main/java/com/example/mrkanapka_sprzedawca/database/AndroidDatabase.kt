@@ -4,13 +4,16 @@ import android.arch.persistence.room.Database
 import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.content.Context
-import com.example.mrkanapka_sprzedawca.database.entity.OfficeEntity
+import com.example.mrkanapka_sprzedawca.database.dao.DateDao
+import com.example.mrkanapka_sprzedawca.database.dao.DestinationsDao
+import com.example.mrkanapka_sprzedawca.database.dao.OrderDao
+import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
 
 @Database(
-    version = 1,
+    version = 2,
     exportSchema = false,
     entities = [
-        OfficeEntity::class
+        DestinationsEntity::class
     ]
 )
 
@@ -30,4 +33,13 @@ abstract class AndroidDatabase : RoomDatabase() {
                 .build()
         }
     }
+
+    //region Dao
+
+    abstract fun DateDao(): DateDao
+
+    abstract fun DestinationsDao(): DestinationsDao
+
+    abstract fun OrderDao(): OrderDao
+    //endregion
 }

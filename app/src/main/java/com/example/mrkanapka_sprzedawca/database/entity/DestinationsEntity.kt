@@ -4,18 +4,15 @@ import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
 
-@Entity(tableName = "offices")
+@Entity(tableName = "destinations")
 
-data class OfficeEntity(
-
-    @ColumnInfo(name = "id_office")
-    var id_seller: Int,
-
-    @ColumnInfo(name = "sellername")
-    var sellername: String,
+data class DestinationsEntity(
 
     @ColumnInfo(name = "id_destination")
-    var id_destination: Int
+    var id_destination: Int,
+
+    @ColumnInfo(name = "name")
+    var name: String
 
 )
 {
