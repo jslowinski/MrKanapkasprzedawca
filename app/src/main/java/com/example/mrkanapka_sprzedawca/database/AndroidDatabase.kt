@@ -4,11 +4,14 @@ import android.arch.persistence.room.Database
 import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.content.Context
+import com.example.mrkanapka_sprzedawca.database.entity.OfficeEntity
 
 @Database(
     version = 1,
     exportSchema = false,
-    entities = []
+    entities = [
+        OfficeEntity::class
+    ]
 )
 
 abstract class AndroidDatabase : RoomDatabase() {
