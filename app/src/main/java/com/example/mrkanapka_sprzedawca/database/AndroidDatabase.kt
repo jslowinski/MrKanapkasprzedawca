@@ -7,13 +7,17 @@ import android.content.Context
 import com.example.mrkanapka_sprzedawca.database.dao.DateDao
 import com.example.mrkanapka_sprzedawca.database.dao.DestinationsDao
 import com.example.mrkanapka_sprzedawca.database.dao.OrderDao
+import com.example.mrkanapka_sprzedawca.database.entity.DateEntity
 import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
+import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
 
 @Database(
-    version = 2,
+    version = 3,
     exportSchema = false,
     entities = [
-        DestinationsEntity::class
+        DestinationsEntity::class,
+        DateEntity::class,
+        OrderEntity::class
     ]
 )
 

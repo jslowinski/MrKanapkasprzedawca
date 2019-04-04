@@ -9,7 +9,9 @@ import android.arch.persistence.room.PrimaryKey
 data class DateEntity(
 
     @ColumnInfo(name = "date")
-    var date: String
+    var date: String,
+    @ColumnInfo(name = "id_destination")
+    var id_destination: Int
 ){
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")

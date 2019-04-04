@@ -11,15 +11,15 @@ abstract class DestinationsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insert(entities: List<DestinationsEntity>)
 
-    @Query("DELETE FROM destinations WHERE id_destination = :id_destination")
-    abstract fun removeDestinations(id_destination: Int)
+    @Query("DELETE FROM destinations ")
+    abstract fun removeDestinations()
 
-    @Query("SELECT * FROM destinations WHERE id_destination = :id_destination")
-    abstract fun getDestinations(id_destination: Int): Maybe<List<DestinationsEntity>>
+    @Query("SELECT * FROM destinations")
+    abstract fun getDestinations(): Maybe<List<DestinationsEntity>>
 
     @Transaction
-    open fun removeAndInsert(entities: List<DestinationsEntity>, id_destination: Int){
-        removeDestinations(id_destination)
+    open fun removeAndInsert(entities: List<DestinationsEntity>){
+        removeDestinations()
         insert(entities)
     }
 }

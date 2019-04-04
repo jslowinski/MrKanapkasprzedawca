@@ -1,6 +1,8 @@
 package com.example.mrkanapka_sprzedawca.database.dao
 
 import android.arch.persistence.room.*
+import com.example.mrkanapka_sprzedawca.api.model.OrderDto
+import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
 import io.reactivex.Maybe
 
 
@@ -8,17 +10,17 @@ import io.reactivex.Maybe
 abstract class OrderDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insert(entities: List<OrderDao>)
+    abstract fun insert(entities: List<OrderEntity>)
 
-    @Query("DELETE FROM orders WHERE order_number LIKE :order_number")
-    abstract fun removeOrders(order_number: String)
+    @Query("DELETE FROM orders WHERE data LIKE :data AND id_destination = :id_destination")
+    abstract fun removeOrders(data: String, id_destination: Int)
 
-    @Query("SELECT * FROM orders WHERE order_number LIKE :order_number")
-    abstract fun getOrders(order_number: String): Maybe<List<OrderDao>>
+    @Query("SELECT * FROM orders WHERE data LIKE :data AND id_destination = :id_destination")
+    abstract fun getOrders(data: String, id_destination: Int): Maybe<List<OrderEntity>>
 
     @Transaction
-    open fun removeAndInsert(entities: List<OrderDao>, order_number: String){
-        removeOrders(order_number)
+    open fun removeAndInsert(entities: List<OrderEntity>, data: String, id_destination: Int){
+        removeOrders(data, id_destination)
         insert(entities)
     }
 }

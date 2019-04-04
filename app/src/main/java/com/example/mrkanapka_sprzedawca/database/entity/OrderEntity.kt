@@ -15,7 +15,14 @@ data class OrderEntity(
     var order_number: String,
 
     @ColumnInfo(name = "status")
-    var status: String
+    var status: String,
+
+    @ColumnInfo(name = "data")
+    var data: String,
+
+    @ColumnInfo(name = "id_destination")
+    var id_destination: Int
+
 ) {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
