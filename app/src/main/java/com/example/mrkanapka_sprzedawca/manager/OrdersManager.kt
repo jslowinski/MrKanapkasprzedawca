@@ -42,8 +42,8 @@ class OrdersManager {
             val entities = orderDto.map {
                 OrderEntity(
                     it.email,
-                    it.status,
                     it.order_number,
+                    it.status,
                     data,
                     id_destination
                 )

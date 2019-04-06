@@ -2,6 +2,7 @@ package com.example.mrkanapka_sprzedawca.view
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.os.Handler
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.AppCompatActivity
@@ -41,6 +42,10 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     private val disposables: CompositeDisposable = CompositeDisposable()
 
+    private lateinit var mHandler: Handler
+
+    private lateinit var mRunnable:Runnable
+
 
     private fun handleFetchDestinationError(throwable: Throwable) {
 //        text1.text = throwable.message
@@ -71,7 +76,14 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         }
 //        text4.text = string
         Log.e("...", "date z cache")
-        setCalendarDate(id, date[0].date, date[date.size-1].date)
+        Log.e("...", date.size.toString())
+        if (date.isEmpty()) {
+            Log.e("...","pusto")
+        }
+        else {
+            setCalendarDate(id, date[0].date, date[date.size-1].date)
+        }
+
     }
 
     private fun setCalendarDate(id: Int, mindate: String, maxdate: String){
@@ -82,7 +94,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         val month = c.get(Calendar.MONTH)
         val day = c.get(Calendar.DAY_OF_MONTH)
         val sdf2 = SimpleDateFormat("dd/MM/yyyy")
-        val currentDate = sdf2.format(c.timeInMillis + 86400000) //dziś + 1 dzień
+        val currentDate = sdf2.format(c.timeInMillis)
         val splitDate = currentDate.split("/")
         dayS = splitDate[0]
         monthS = splitDate[1]
@@ -122,6 +134,14 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
             dpd.show()
         }
+        mHandler = Handler()
+        swpipeOrder.setOnRefreshListener {
+            mRunnable = Runnable {
+                getOrder("/$yearS-$monthS-$dayS", id)
+            }
+            mHandler.post(mRunnable)
+        }
+
         getOrder("/$yearS-$monthS-$dayS", id)
         //endregion
     }
@@ -130,6 +150,8 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         orderManager
             .getOrders(date, id) //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { showProgress() } //funkcje np progressbar show
+            .doFinally { hideProgress() } //funkcje np progressbar show
             .subscribe(
                 this::handleFetchOrderCacheSuccess,
                 this::handleFetchOrderCacheError
@@ -141,8 +163,8 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             .downloadOrders("" + 37 + "/" + id + date, date, id)
             .andThen(orderManager.getOrders(date, id))
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe {  } //funkcje np progressbar show
-            .doFinally {  } //funkcje np progressbar show
+            .doOnSubscribe { showProgress() } //funkcje np progressbar show
+            .doFinally { hideProgress() } //funkcje np progressbar show
             .subscribe(
                 this::handleFetchOrderSuccess,
                 this::handleFetchOrderError
@@ -227,6 +249,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
         officeSpinner.adapter = adapterSpinner
+        officeSpinner.setSelection(0,false)
         officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 Log.e("...", " Nothing")
@@ -244,7 +267,45 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                     .addTo(disposables)
 
                 //From api
-                Log.e("...", destination[position].toString())
+
+                orderManager
+                    .downloadData("" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
+                    .andThen(orderManager.getData(destination[position].id_destination))
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnSubscribe {  } //funkcje np progressbar show
+                    .doFinally {  } //funkcje np progressbar show
+                    .subscribe(
+                        {handleFetchDataSuccess(it,destination[position].id_destination)},
+                        {handleFetchDataError(it)}
+                    )
+                    .addTo(disposables)
+            }
+
+        }
+    }
+    private fun setOfficeSpinnerCache(myDestination: ArrayList<String>, destination: List<DestinationsEntity>){
+        val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
+        val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
+        officeSpinner.adapter = adapterSpinner
+        officeSpinner.setSelection(0,false)
+        officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.e("...", " Nothing")
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                Toast.makeText(applicationContext,destination[position].name, Toast.LENGTH_LONG).show()
+                orderManager
+                    .getData(destination[position].id_destination) //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        {handleFetchDataCacheSuccess(it,destination[position].id_destination)},
+                        {handleFetchDataCacheError(it)}
+                    )
+                    .addTo(disposables)
+
+                //From api
+
                 orderManager
                     .downloadData("" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
                     .andThen(orderManager.getData(destination[position].id_destination))
@@ -265,6 +326,14 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.itemAnimator = DefaultItemAnimator()
         recyclerView.adapter = adapter
+    }
+
+    private fun showProgress() {
+        swpipeOrder.isRefreshing = true
+    }
+
+    private fun hideProgress() {
+        swpipeOrder.isRefreshing = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -299,10 +368,22 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             )
             .addTo(disposables)
 
+        orderManager
+            .downloadDestination("" + 37)
+            .andThen(orderManager.getDestination())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe {  } //funkcje np progressbar show
+            .doFinally {  } //funkcje np progressbar show
+            .subscribe(
+                {handleFetchDestinationSuccess(it)},
+                {handleFetchDestinationError(it)}
+            )
+            .addTo(disposables)
+
 //        getOrder("/2019-04-02",2)
 
-        initializeRecyclerView()
 
+        initializeRecyclerView()
 
         //region Hamburger menu
 
