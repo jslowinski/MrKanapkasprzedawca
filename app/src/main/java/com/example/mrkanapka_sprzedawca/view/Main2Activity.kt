@@ -368,18 +368,6 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             )
             .addTo(disposables)
 
-        orderManager
-            .downloadDestination("" + 37)
-            .andThen(orderManager.getDestination())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe {  } //funkcje np progressbar show
-            .doFinally {  } //funkcje np progressbar show
-            .subscribe(
-                {handleFetchDestinationSuccess(it)},
-                {handleFetchDestinationError(it)}
-            )
-            .addTo(disposables)
-
 //        getOrder("/2019-04-02",2)
 
 
