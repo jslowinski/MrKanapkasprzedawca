@@ -1,5 +1,6 @@
 package com.example.mrkanapka_sprzedawca.view
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.os.Handler
@@ -8,23 +9,33 @@ import android.support.v4.view.GravityCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import com.example.mrkanapka_sprzedawca.R
+import com.example.mrkanapka_sprzedawca.api.ApiClient
+import com.example.mrkanapka_sprzedawca.api.model.RequestStatus
 import com.example.mrkanapka_sprzedawca.database.entity.DateEntity
 import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
 import com.example.mrkanapka_sprzedawca.manager.OrdersManager
 import com.example.mrkanapka_sprzedawca.view.list.OrderListItem
+import com.mikepenz.fastadapter.FastAdapter
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter
+import com.mikepenz.fastadapter.listeners.ClickEventHook
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.app_bar_main2.*
 import kotlinx.android.synthetic.main.content_main2.*
+import kotlinx.android.synthetic.main.item_in_order.view.*
+import retrofit2.HttpException
+import java.text.FieldPosition
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +47,10 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     private val orderManager by lazy {
         OrdersManager()
+    }
+
+    private val apiService by lazy {
+        ApiClient.create()
     }
 
     private var token = ""
@@ -160,7 +175,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
         //From api
         orderManager
-            .downloadOrders("" + 37 + "/" + id + date, date, id)
+            .downloadOrders("delivery/" + 37 + "/" + id + date, date, id)
             .andThen(orderManager.getOrders(date, id))
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { showProgress() } //funkcje np progressbar show
@@ -170,6 +185,8 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 this::handleFetchOrderError
             )
             .addTo(disposables)
+        initializeRecyclerView()
+
     }
 
     private fun handleFetchDataError(throwable: Throwable) {
@@ -249,7 +266,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
         officeSpinner.adapter = adapterSpinner
-        officeSpinner.setSelection(0,false)
+//        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
         officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 Log.e("...", " Nothing")
@@ -269,7 +286,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 //From api
 
                 orderManager
-                    .downloadData("" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
+                    .downloadData("delivery/" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
                     .andThen(orderManager.getData(destination[position].id_destination))
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe {  } //funkcje np progressbar show
@@ -307,7 +324,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 //From api
 
                 orderManager
-                    .downloadData("" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
+                    .downloadData("delivery/" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
                     .andThen(orderManager.getData(destination[position].id_destination))
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe {  } //funkcje np progressbar show
@@ -326,6 +343,76 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.itemAnimator = DefaultItemAnimator()
         recyclerView.adapter = adapter
+
+        adapter.withEventHook(object : ClickEventHook<OrderListItem>() {
+            override fun onBindMany(viewHolder: RecyclerView.ViewHolder) =
+                viewHolder.itemView.run { listOf(button) }
+
+            override fun onClick(v: View?, position: Int, fastAdapter: FastAdapter<OrderListItem>, item: OrderListItem?) {
+                if (v != null && item != null){
+                    changeOnTransport(v, item, position)
+                }
+            }
+
+        })
+        adapter.withEventHook(object : ClickEventHook<OrderListItem>() {
+            override fun onBindMany(viewHolder: RecyclerView.ViewHolder) =
+                viewHolder.itemView.run { listOf(button2) }
+
+            override fun onClick(v: View?, position: Int, fastAdapter: FastAdapter<OrderListItem>, item: OrderListItem?) {
+                if (v != null && item != null){
+                    changeOnReady(v, item, position)
+                }
+            }
+
+        })
+    }
+
+    @SuppressLint("CheckResult")
+    private fun changeOnReady(v: View, item: OrderListItem, position: Int) {
+        apiService.changeOnReady(RequestStatus("2P9JqQG1hsrDYy4S2x7UE7sRsK4", item.model.order_number))
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .unsubscribeOn(Schedulers.io())
+            .subscribeBy(
+                onNext = {
+                    item.model.status = it.new_status
+                },
+                onError = {
+                    if (it is HttpException)
+                        Toast.makeText(applicationContext,it.message(), Toast.LENGTH_LONG).show()
+                    else
+                        Toast.makeText(applicationContext,"Sprawdź połączenie z internetem", Toast.LENGTH_LONG).show()
+                },
+                onComplete = {
+                    adapter.notifyItemChanged(position)
+                }
+            )
+
+    }
+
+    @SuppressLint("CheckResult")
+    private fun changeOnTransport(v: View, item: OrderListItem, position: Int) {
+        apiService.changeOnTransport(RequestStatus("2P9JqQG1hsrDYy4S2x7UE7sRsK4", item.model.order_number))
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .unsubscribeOn(Schedulers.io())
+            .subscribeBy(
+                onNext = {
+                    item.model.status = it.new_status
+                    adapter.notifyItemChanged(position)
+                },
+                onError = {
+                    if (it is HttpException)
+                        Toast.makeText(applicationContext,it.message(), Toast.LENGTH_LONG).show()
+                    else
+                        Toast.makeText(applicationContext,it.message, Toast.LENGTH_LONG).show()
+                },
+                onComplete = {
+                    adapter.notifyItemChanged(position)
+                }
+            )
+
     }
 
     private fun showProgress() {
@@ -345,7 +432,6 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             Toast.makeText(applicationContext,"Przycisk", Toast.LENGTH_LONG).show()
         }
 
-
         orderManager
             .getDestination() //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
             .observeOn(AndroidSchedulers.mainThread())
@@ -357,7 +443,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
         //From api
         orderManager
-            .downloadDestination("" + 37)
+            .downloadDestination("delivery/" + 37)
             .andThen(orderManager.getDestination())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe {  } //funkcje np progressbar show
@@ -368,10 +454,6 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             )
             .addTo(disposables)
 
-//        getOrder("/2019-04-02",2)
-
-
-        initializeRecyclerView()
 
         //region Hamburger menu
 

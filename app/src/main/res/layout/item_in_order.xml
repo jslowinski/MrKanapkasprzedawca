@@ -65,6 +65,23 @@
                 app:layout_constraintTop_toTopOf="@+id/textView23"
                 app:layout_constraintBottom_toBottomOf="@+id/textView23" android:textStyle="italic"
                 android:textSize="18sp"/>
+        <Button
+                android:text="W drodze"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/button"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/textView23" app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"/>
+        <Button
+                android:text="Do odbioru"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/button2" android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/textView23" app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"/>
         <!--<TextView-->
                 <!--android:text="Kwota:"-->
                 <!--android:layout_width="wrap_content"-->

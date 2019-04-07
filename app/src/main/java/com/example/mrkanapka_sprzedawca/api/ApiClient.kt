@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class ApiClient {
     companion object {
 
-        private const val BASE_URL = "http://zespol9-server.herokuapp.com/api/sellerapi/delivery/"
+        private const val BASE_URL = "http://zespol9-server.herokuapp.com/api/sellerapi/"
 
         private val retrofit by lazy {
             Retrofit.Builder()

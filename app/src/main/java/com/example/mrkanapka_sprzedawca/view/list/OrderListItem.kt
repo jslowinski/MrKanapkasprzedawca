@@ -1,6 +1,7 @@
 package com.example.mrkanapka_sprzedawca.view.list
 
 import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import com.example.mrkanapka_sprzedawca.R
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
@@ -31,7 +32,8 @@ class OrderListItem(model: OrderEntity) : ModelAbstractItem<OrderEntity, OrderLi
         private val nameText: TextView = itemView.findViewById(R.id.numberOrderTextView)
         private val emailText: TextView = itemView.findViewById(R.id.emailOrderTextView)
         private val statusText: TextView = itemView.findViewById(R.id.statusOrderTextView)
-
+        private val button: Button = itemView.findViewById(R.id.button)
+        private val button2: Button = itemView.findViewById(R.id.button2)
         override fun bindView(item: OrderListItem, payloads: MutableList<Any>) {
 
             // Retrieve model.
@@ -41,6 +43,16 @@ class OrderListItem(model: OrderEntity) : ModelAbstractItem<OrderEntity, OrderLi
             nameText.text = model.order_number
             emailText.text = model.email
             statusText.text = model.status
+            if (model.status == "Do realizacji") {
+                button.visibility = View.VISIBLE
+                button2.visibility = View.GONE
+            } else if (model.status == "W transporcie") {
+                button2.visibility = View.VISIBLE
+                button.visibility = View.GONE
+            } else {
+                button.visibility = View.GONE
+                button2.visibility = View.GONE
+            }
         }
 
         override fun unbindView(item: OrderListItem) {
