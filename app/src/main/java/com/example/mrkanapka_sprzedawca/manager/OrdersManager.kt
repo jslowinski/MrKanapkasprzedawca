@@ -10,6 +10,7 @@ import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
 import io.reactivex.Completable
 import io.reactivex.Maybe
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
 class OrdersManager {
@@ -118,4 +119,14 @@ class OrdersManager {
             .getDestinations()
             .subscribeOn(Schedulers.io())
     //endregion
+
+    //region STATUS
+    fun updateStatus(order_number: String, status: String) =
+            Completable.fromAction{
+                database.OrderDao().updateStatus(order_number,status)
+            }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    // data updated
+                }
 }

@@ -61,7 +61,6 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     private lateinit var mRunnable:Runnable
 
-
     private fun handleFetchDestinationError(throwable: Throwable) {
 //        text1.text = throwable.message
     }
@@ -266,14 +265,16 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
         officeSpinner.adapter = adapterSpinner
+
 //        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
+
         officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 Log.e("...", " Nothing")
             }
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                Toast.makeText(applicationContext,destination[position].name, Toast.LENGTH_LONG).show()
+//                Toast.makeText(applicationContext,destination[position].name, Toast.LENGTH_LONG).show()
                 orderManager
                     .getData(destination[position].id_destination) //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
                     .observeOn(AndroidSchedulers.mainThread())
@@ -297,9 +298,9 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                     )
                     .addTo(disposables)
             }
-
         }
     }
+
     private fun setOfficeSpinnerCache(myDestination: ArrayList<String>, destination: List<DestinationsEntity>){
         val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
@@ -377,6 +378,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             .subscribeBy(
                 onNext = {
                     item.model.status = it.new_status
+                    orderManager.updateStatus(item.model.order_number, it.new_status)
                 },
                 onError = {
                     if (it is HttpException)
@@ -400,7 +402,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             .subscribeBy(
                 onNext = {
                     item.model.status = it.new_status
-                    adapter.notifyItemChanged(position)
+                    orderManager.updateStatus(item.model.order_number, it.new_status)
                 },
                 onError = {
                     if (it is HttpException)
@@ -498,7 +500,6 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 //    }
 
     //endregion
-
 
     //region Hamburger menu
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
