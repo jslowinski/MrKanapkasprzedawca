@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context="com.example.mrkanapka_sprzedawca.view.Login"
+        android:background="@color/colorPrimaryDark"
+        android:id="@+id/root_layout"
+>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_centerVertical="true"
+            android:focusableInTouchMode="true">
+
+        <ImageView
+                android:layout_width="125dp"
+                android:layout_height="125dp"
+                android:src="@drawable/icon"
+                android:layout_gravity="center_horizontal"/>
+
+        <EditText
+                android:id="@+id/login_text"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:layout_marginTop="20dp"
+                android:textColorHint="#ffffff"
+                android:textColor="#ffffff"
+                android:drawableStart="@drawable/ic_email_black_24dp"
+                android:drawablePadding="10dp"
+                android:hint="Nazwa użytkownika"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/login_edit_background"
+                android:padding="10dp"
+                android:maxLines="1"
+                android:inputType="textEmailAddress"/>
+
+        <EditText
+                android:id="@+id/password_text"
+                android:inputType="textPassword"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:layout_marginTop="10dp"
+                android:textColorHint="#ffffff"
+                android:textColor="#ffffff"
+                android:drawableStart="@drawable/ic_lock_black_24dp"
+                android:drawablePadding="10dp"
+                android:hint="Hasło"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/login_edit_background"
+                android:padding="10dp"/>
+
+        <Button
+                android:id="@+id/login_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="20dp"
+                android:backgroundTint="@color/colorButton"
+                android:text="Zaloguj"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

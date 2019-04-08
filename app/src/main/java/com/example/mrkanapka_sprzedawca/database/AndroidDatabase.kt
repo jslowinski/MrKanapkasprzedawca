@@ -7,17 +7,20 @@ import android.content.Context
 import com.example.mrkanapka_sprzedawca.database.dao.DateDao
 import com.example.mrkanapka_sprzedawca.database.dao.DestinationsDao
 import com.example.mrkanapka_sprzedawca.database.dao.OrderDao
+import com.example.mrkanapka_sprzedawca.database.dao.TokenDao
 import com.example.mrkanapka_sprzedawca.database.entity.DateEntity
 import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
+import com.example.mrkanapka_sprzedawca.database.entity.TokenEntity
 
 @Database(
-    version = 3,
+    version = 4,
     exportSchema = false,
     entities = [
         DestinationsEntity::class,
         DateEntity::class,
-        OrderEntity::class
+        OrderEntity::class,
+        TokenEntity::class
     ]
 )
 
@@ -45,5 +48,7 @@ abstract class AndroidDatabase : RoomDatabase() {
     abstract fun DestinationsDao(): DestinationsDao
 
     abstract fun OrderDao(): OrderDao
+
+    abstract fun TokenDao(): TokenDao
     //endregion
 }

@@ -2,6 +2,7 @@ package com.example.mrkanapka_sprzedawca.view
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.NavigationView
@@ -20,6 +21,7 @@ import com.example.mrkanapka_sprzedawca.api.model.RequestStatus
 import com.example.mrkanapka_sprzedawca.database.entity.DateEntity
 import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
+import com.example.mrkanapka_sprzedawca.database.entity.TokenEntity
 import com.example.mrkanapka_sprzedawca.manager.OrdersManager
 import com.example.mrkanapka_sprzedawca.view.list.OrderListItem
 import com.mikepenz.fastadapter.FastAdapter
@@ -35,10 +37,13 @@ import kotlinx.android.synthetic.main.app_bar_main2.*
 import kotlinx.android.synthetic.main.content_main2.*
 import kotlinx.android.synthetic.main.item_in_order.view.*
 import retrofit2.HttpException
+import java.security.SecureRandom
+import java.security.spec.KeySpec
 import java.text.FieldPosition
 import java.text.SimpleDateFormat
 import java.util.*
-
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 
 
 class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -90,7 +95,6 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         }
 //        text4.text = string
         Log.e("...", "date z cache")
-        Log.e("...", date.size.toString())
         if (date.isEmpty()) {
             Log.e("...","pusto")
         }
@@ -266,7 +270,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
         officeSpinner.adapter = adapterSpinner
 
-//        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
+        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
 
         officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -417,6 +421,34 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     }
 
+    private fun handleTokenCacheSuccess(token: TokenEntity) {
+        orderManager
+            .getDestination() //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                this::handleFetchDestinationCacheSuccess,
+                this::handleFetchDestinationCacheError
+            )
+            .addTo(disposables)
+
+        //From api
+        orderManager
+            .downloadDestination("delivery/" + token.id_seller)
+            .andThen(orderManager.getDestination())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe {  } //funkcje np progressbar show
+            .doFinally {  } //funkcje np progressbar show
+            .subscribe(
+                {handleFetchDestinationSuccess(it)},
+                {handleFetchDestinationError(it)}
+            )
+            .addTo(disposables)
+    }
+
+    private fun handleTokenCacheError(throwable: Throwable) {
+        Log.e("...","brak tokenu")
+    }
+
     private fun showProgress() {
         swpipeOrder.isRefreshing = true
     }
@@ -431,30 +463,21 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener {
-            Toast.makeText(applicationContext,"Przycisk", Toast.LENGTH_LONG).show()
+            orderManager.removeToken()
+            val intent = Intent(this, Login::class.java)
+            startActivity(intent)
+            finish()
         }
 
         orderManager
-            .getDestination() //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
+            .getToken()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
-                this::handleFetchDestinationCacheSuccess,
-                this::handleFetchDestinationCacheError
+                this::handleTokenCacheSuccess,
+                this::handleTokenCacheError
             )
             .addTo(disposables)
 
-        //From api
-        orderManager
-            .downloadDestination("delivery/" + 37)
-            .andThen(orderManager.getDestination())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe {  } //funkcje np progressbar show
-            .doFinally {  } //funkcje np progressbar show
-            .subscribe(
-                {handleFetchDestinationSuccess(it)},
-                {handleFetchDestinationError(it)}
-            )
-            .addTo(disposables)
 
 
         //region Hamburger menu

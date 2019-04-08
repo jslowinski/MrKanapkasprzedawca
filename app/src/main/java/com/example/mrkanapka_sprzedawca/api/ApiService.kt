@@ -24,4 +24,7 @@ interface ApiService {
 
     @PUT("change/oneready")
     fun changeOnReady(@Body body: RequestStatus): Observable<ResponseStatus>
+
+    @PUT("login")
+    fun login(@Body body: RequestLogin): Observable<ResponseLogin>
 }

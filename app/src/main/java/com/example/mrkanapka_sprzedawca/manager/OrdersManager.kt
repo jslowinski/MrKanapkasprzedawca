@@ -4,12 +4,15 @@ import com.example.mrkanapka_sprzedawca.api.ApiClient
 import com.example.mrkanapka_sprzedawca.api.model.DateDto
 import com.example.mrkanapka_sprzedawca.api.model.DestinationDto
 import com.example.mrkanapka_sprzedawca.api.model.OrderDto
+import com.example.mrkanapka_sprzedawca.api.model.ResponseLogin
 import com.example.mrkanapka_sprzedawca.database.AndroidDatabase
 import com.example.mrkanapka_sprzedawca.database.entity.DateEntity
 import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
+import com.example.mrkanapka_sprzedawca.database.entity.TokenEntity
 import io.reactivex.Completable
 import io.reactivex.Maybe
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
@@ -129,4 +132,34 @@ class OrdersManager {
                 .subscribe {
                     // data updated
                 }
+    //endregion
+
+    //region TOKEN
+    fun saveToken(token: String, id_seller: Int) =
+            Completable.fromAction{
+                database.TokenDao()
+                    .removeAndInsert(TokenEntity(token, id_seller))
+            }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    // data updated
+                }
+
+    fun getToken(): Single<TokenEntity> =
+        database
+            .TokenDao()
+            .getToken()
+            .subscribeOn(Schedulers.io())
+
+    fun removeToken() =
+            Completable.fromAction {
+                database.TokenDao()
+                    .removeToken()
+            }.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    // data updated
+                }
+
+    //endregion
 }
