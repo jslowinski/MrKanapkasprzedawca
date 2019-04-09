@@ -3,10 +3,7 @@ package com.example.mrkanapka_sprzedawca.api
 import com.example.mrkanapka_sprzedawca.api.model.*
 import io.reactivex.Observable
 import io.reactivex.Single
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.PUT
-import retrofit2.http.Url
+import retrofit2.http.*
 
 interface ApiService {
 
@@ -27,4 +24,8 @@ interface ApiService {
 
     @PUT("login")
     fun login(@Body body: RequestLogin): Observable<ResponseLogin>
+
+    @Headers("Authorization: key=AAAA5vPcH3I:APA91bHAtWhBhuHv6EAfwxdu186kUT_0718-wd8LXW7psIEMfJLeRDopdgVHTKsj3gqQxJ8g7iQII3vywFmL8G8vx1ZnBvRlvyR5ClcAyg7VR31BpIVrKXOM4kZr_SKURUXcjLKy2KVU")
+    @POST("send")
+    fun sendSinglePush(@Body body: RequestSinglePush<PushNotification>): Observable<ResponseNotification>
 }

@@ -17,6 +17,9 @@ data class OrderEntity(
     @ColumnInfo(name = "status")
     var status: String,
 
+    @ColumnInfo(name = "registrationid")
+    var registrationid: String,
+
     @ColumnInfo(name = "data")
     var data: String,
 

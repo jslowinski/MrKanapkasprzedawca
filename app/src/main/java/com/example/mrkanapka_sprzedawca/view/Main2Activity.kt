@@ -17,6 +17,8 @@ import android.view.View
 import android.widget.*
 import com.example.mrkanapka_sprzedawca.R
 import com.example.mrkanapka_sprzedawca.api.ApiClient
+import com.example.mrkanapka_sprzedawca.api.model.PushNotification
+import com.example.mrkanapka_sprzedawca.api.model.RequestSinglePush
 import com.example.mrkanapka_sprzedawca.api.model.RequestStatus
 import com.example.mrkanapka_sprzedawca.database.entity.DateEntity
 import com.example.mrkanapka_sprzedawca.database.entity.DestinationsEntity
@@ -58,6 +60,10 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         ApiClient.create()
     }
 
+    private val apiNotification by lazy{
+        ApiClient.createPush()
+    }
+
     private var token = ""
 
     private val disposables: CompositeDisposable = CompositeDisposable()
@@ -84,7 +90,13 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         }
 //        text3.text = string
         Log.e("...", "date z api")
-        setCalendarDate(id, date[0].date, date[date.size-1].date)
+        if (date.isEmpty()) {
+            Log.e("...","pusto")
+        }
+        else {
+            Log.e("...",date[0].date)
+            setCalendarDate(id, date[0].date, date[date.size-1].date)
+        }
     }
 
     private fun handleFetchDataCacheSuccess(date: List<DateEntity>, id: Int) {
@@ -99,12 +111,13 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
             Log.e("...","pusto")
         }
         else {
+            Log.e("...",date[0].date)
             setCalendarDate(id, date[0].date, date[date.size-1].date)
         }
 
     }
 
-    private fun setCalendarDate(id: Int, mindate: String, maxdate: String){
+    private fun setCalendarDate(id: Int, maxdate: String, mindate: String){
         //region Calendar
         val sdf = SimpleDateFormat("yyyy-MM-dd")
         val c = Calendar.getInstance()
@@ -135,7 +148,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                     }
                 }
                 yearS = "$mYear"
-
+                Log.e("...", "$yearS-$monthS-$dayS")
                 getOrder("/$yearS-$monthS-$dayS", id)
             }, year, month, day)
 
@@ -375,7 +388,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     @SuppressLint("CheckResult")
     private fun changeOnReady(v: View, item: OrderListItem, position: Int) {
-        apiService.changeOnReady(RequestStatus("2P9JqQG1hsrDYy4S2x7UE7sRsK4", item.model.order_number))
+        apiService.changeOnReady(RequestStatus(token, item.model.order_number))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .unsubscribeOn(Schedulers.io())
@@ -383,6 +396,23 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 onNext = {
                     item.model.status = it.new_status
                     orderManager.updateStatus(item.model.order_number, it.new_status)
+                    val title = "Pan Kanapka przyjechał."
+                    val body = "Zamówienie ${item.model.order_number} gotowe do odbioru."
+                    apiNotification.sendSinglePush(RequestSinglePush(PushNotification(title,body),item.model.registrationid))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .unsubscribeOn(Schedulers.io())
+                        .subscribeBy(
+                            onNext = {
+                                Log.e("...",it.success.toString())
+                            },
+                            onError = {
+                                if (it is HttpException)
+                                    Toast.makeText(applicationContext,it.message(), Toast.LENGTH_LONG).show()
+                                else
+                                    Toast.makeText(applicationContext,"Sprawdź połączenie z internetem", Toast.LENGTH_LONG).show()
+                            }
+                        )
                 },
                 onError = {
                     if (it is HttpException)
@@ -399,7 +429,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     @SuppressLint("CheckResult")
     private fun changeOnTransport(v: View, item: OrderListItem, position: Int) {
-        apiService.changeOnTransport(RequestStatus("2P9JqQG1hsrDYy4S2x7UE7sRsK4", item.model.order_number))
+        apiService.changeOnTransport(RequestStatus(token, item.model.order_number))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .unsubscribeOn(Schedulers.io())
@@ -407,6 +437,23 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 onNext = {
                     item.model.status = it.new_status
                     orderManager.updateStatus(item.model.order_number, it.new_status)
+                    val title = "Pan Kanapka już do Ciebie jedzie."
+                    val body = "Zamówienie ${item.model.order_number} jest w drodze."
+                    apiNotification.sendSinglePush(RequestSinglePush(PushNotification(title,body),item.model.registrationid))
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .unsubscribeOn(Schedulers.io())
+                        .subscribeBy(
+                            onNext = {
+                                Log.e("...",it.success.toString())
+                            },
+                            onError = {
+                                if (it is HttpException)
+                                    Toast.makeText(applicationContext,it.message(), Toast.LENGTH_LONG).show()
+                                else
+                                    Toast.makeText(applicationContext,"Sprawdź połączenie z internetem", Toast.LENGTH_LONG).show()
+                            }
+                        )
                 },
                 onError = {
                     if (it is HttpException)
@@ -422,6 +469,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
     }
 
     private fun handleTokenCacheSuccess(token: TokenEntity) {
+        this.token = token.token
         orderManager
             .getDestination() //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
             .observeOn(AndroidSchedulers.mainThread())

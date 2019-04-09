@@ -14,7 +14,7 @@ import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
 import com.example.mrkanapka_sprzedawca.database.entity.TokenEntity
 
 @Database(
-    version = 4,
+    version = 5,
     exportSchema = false,
     entities = [
         DestinationsEntity::class,

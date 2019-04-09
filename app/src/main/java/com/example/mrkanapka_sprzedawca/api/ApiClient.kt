@@ -23,5 +23,20 @@ class ApiClient {
             return retrofit.create(ApiService::class.java)
         }
 
+        private const val PUSH_SEND_URL = "https://fcm.googleapis.com/fcm/"
+
+        private val retrofitPush by lazy {
+            Retrofit.Builder()
+                .addCallAdapterFactory(
+                    RxJava2CallAdapterFactory.create())
+                .addConverterFactory(
+                    GsonConverterFactory.create())
+                .baseUrl(PUSH_SEND_URL)
+                .build()
+        }
+
+        fun createPush(): ApiService {
+            return retrofitPush.create(ApiService::class.java)
+        }
     }
 }
