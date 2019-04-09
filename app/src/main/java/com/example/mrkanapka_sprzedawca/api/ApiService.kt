@@ -27,5 +27,5 @@ interface ApiService {
 
     @Headers("Authorization: key=AAAA5vPcH3I:APA91bHAtWhBhuHv6EAfwxdu186kUT_0718-wd8LXW7psIEMfJLeRDopdgVHTKsj3gqQxJ8g7iQII3vywFmL8G8vx1ZnBvRlvyR5ClcAyg7VR31BpIVrKXOM4kZr_SKURUXcjLKy2KVU")
     @POST("send")
-    fun sendSinglePush(@Body body: RequestSinglePush<PushNotification>): Observable<ResponseNotification>
+    fun sendSinglePush(@Body body: RequestSinglePush<PushNotification,PushData>): Observable<ResponseNotification>
 }

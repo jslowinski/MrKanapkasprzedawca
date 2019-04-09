@@ -17,6 +17,7 @@ import android.view.View
 import android.widget.*
 import com.example.mrkanapka_sprzedawca.R
 import com.example.mrkanapka_sprzedawca.api.ApiClient
+import com.example.mrkanapka_sprzedawca.api.model.PushData
 import com.example.mrkanapka_sprzedawca.api.model.PushNotification
 import com.example.mrkanapka_sprzedawca.api.model.RequestSinglePush
 import com.example.mrkanapka_sprzedawca.api.model.RequestStatus
@@ -398,7 +399,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                     orderManager.updateStatus(item.model.order_number, it.new_status)
                     val title = "Pan Kanapka przyjechał."
                     val body = "Zamówienie ${item.model.order_number} gotowe do odbioru."
-                    apiNotification.sendSinglePush(RequestSinglePush(PushNotification(title,body),item.model.registrationid))
+                    apiNotification.sendSinglePush(RequestSinglePush(PushNotification(title,body,"OPEN_ACTIVITY_1"), PushData(item.model.order_number),item.model.registrationid))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .unsubscribeOn(Schedulers.io())
@@ -439,7 +440,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                     orderManager.updateStatus(item.model.order_number, it.new_status)
                     val title = "Pan Kanapka już do Ciebie jedzie."
                     val body = "Zamówienie ${item.model.order_number} jest w drodze."
-                    apiNotification.sendSinglePush(RequestSinglePush(PushNotification(title,body),item.model.registrationid))
+                    apiNotification.sendSinglePush(RequestSinglePush(PushNotification(title,body,"OPEN_ACTIVITY_1"),PushData(item.model.order_number),item.model.registrationid))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .unsubscribeOn(Schedulers.io())
