@@ -51,10 +51,11 @@
                 android:drawableStart="@drawable/ic_lock_black_24dp"
                 android:drawablePadding="10dp"
                 android:hint="Hasło"
+                android:fontFamily="@android:string/autofill"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/login_edit_background"
-                android:padding="10dp"/>
+                android:padding="10dp" tools:targetApi="o_mr1"/>
 
         <Button
                 android:id="@+id/login_button"
