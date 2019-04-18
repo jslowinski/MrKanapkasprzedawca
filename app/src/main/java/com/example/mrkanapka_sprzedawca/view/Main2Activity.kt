@@ -3,6 +3,7 @@ package com.example.mrkanapka_sprzedawca.view
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.NavigationView
@@ -12,6 +13,7 @@ import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
@@ -30,26 +32,22 @@ import com.example.mrkanapka_sprzedawca.view.list.OrderListItem
 import com.mikepenz.fastadapter.FastAdapter
 import com.mikepenz.fastadapter.commons.adapters.FastItemAdapter
 import com.mikepenz.fastadapter.listeners.ClickEventHook
+import io.github.kobakei.materialfabspeeddial.FabSpeedDial
+import io.github.kobakei.materialfabspeeddial.FabSpeedDialMenu
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.app_bar_main2.*
 import kotlinx.android.synthetic.main.content_main2.*
 import kotlinx.android.synthetic.main.item_in_order.view.*
 import retrofit2.HttpException
-import java.security.SecureRandom
-import java.security.spec.KeySpec
-import java.text.FieldPosition
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.PBEKeySpec
 
 
-class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class Main2Activity : AppCompatActivity() {
 
     private val adapter: FastItemAdapter<OrderListItem> = FastItemAdapter()
 
@@ -118,13 +116,14 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
     }
 
+    @SuppressLint("SimpleDateFormat")
     private fun setCalendarDate(id: Int, maxdate: String, mindate: String){
         //region Calendar
         val sdf = SimpleDateFormat("yyyy-MM-dd")
         val c = Calendar.getInstance()
-        val year = c.get(Calendar.YEAR)
-        val month = c.get(Calendar.MONTH)
-        val day = c.get(Calendar.DAY_OF_MONTH)
+        var year = c.get(Calendar.YEAR)
+        var month = c.get(Calendar.MONTH)
+        var day = c.get(Calendar.DAY_OF_MONTH)
         val sdf2 = SimpleDateFormat("dd/MM/yyyy")
         val currentDate = sdf2.format(c.timeInMillis)
         val splitDate = currentDate.split("/")
@@ -133,6 +132,9 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         yearS = splitDate[2]
         calendarIcon.setOnClickListener{
             val dpd = DatePickerDialog(this,DatePickerDialog.OnDateSetListener { _, mYear, mMonth, mDay ->
+                day = mDay
+                month = mMonth
+                year = mYear
                 if (mDay < 10){
                     dayS = "0$mDay"
                     monthS = if (mMonth < 10){
@@ -192,7 +194,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
         //From api
         orderManager
-            .downloadOrders("delivery/" + 37 + "/" + id + date, date, id)
+            .downloadOrders("delivery/37/$id$date", date, id)
             .andThen(orderManager.getOrders(date, id))
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { showProgress() } //funkcje np progressbar show
@@ -284,7 +286,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
         officeSpinner.adapter = adapterSpinner
 
-        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
+//        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
 
         officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -369,7 +371,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
             override fun onClick(v: View?, position: Int, fastAdapter: FastAdapter<OrderListItem>, item: OrderListItem?) {
                 if (v != null && item != null){
-                    changeOnTransport(v, item, position)
+                    changeOnTransport(item, position)
                 }
             }
 
@@ -380,7 +382,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
 
             override fun onClick(v: View?, position: Int, fastAdapter: FastAdapter<OrderListItem>, item: OrderListItem?) {
                 if (v != null && item != null){
-                    changeOnReady(v, item, position)
+                    changeOnReady(item, position)
                 }
             }
 
@@ -388,7 +390,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
     }
 
     @SuppressLint("CheckResult")
-    private fun changeOnReady(v: View, item: OrderListItem, position: Int) {
+    private fun changeOnReady(item: OrderListItem, position: Int) {
         apiService.changeOnReady(RequestStatus(token, item.model.order_number))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -404,12 +406,12 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                         .observeOn(AndroidSchedulers.mainThread())
                         .unsubscribeOn(Schedulers.io())
                         .subscribeBy(
-                            onNext = {
-                                Log.e("...",it.success.toString())
+                            onNext = { response ->
+                                Log.e("...",response.success.toString())
                             },
-                            onError = {
-                                if (it is HttpException)
-                                    Toast.makeText(applicationContext,it.message(), Toast.LENGTH_LONG).show()
+                            onError = { error ->
+                                if (error is HttpException)
+                                    Toast.makeText(applicationContext,error.message(), Toast.LENGTH_LONG).show()
                                 else
                                     Toast.makeText(applicationContext,"Sprawdź połączenie z internetem", Toast.LENGTH_LONG).show()
                             }
@@ -429,7 +431,7 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
     }
 
     @SuppressLint("CheckResult")
-    private fun changeOnTransport(v: View, item: OrderListItem, position: Int) {
+    private fun changeOnTransport(item: OrderListItem, position: Int) {
         apiService.changeOnTransport(RequestStatus(token, item.model.order_number))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -505,17 +507,38 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
     private fun hideProgress() {
         swpipeOrder.isRefreshing = false
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener {
-            orderManager.removeToken()
-            val intent = Intent(this, Login::class.java)
-            startActivity(intent)
-            finish()
+        val fab = findViewById<FabSpeedDial>(R.id.fab)
+
+        val menu = FabSpeedDialMenu(this)
+        menu.add("Gotowe do odbioru").setIcon(R.drawable.ic_notifications)
+        menu.add("W drodze").setIcon(R.drawable.ic_notifications)
+        fab.setMenu(menu)
+
+        fab.addOnMenuItemClickListener { _, _, itemId ->
+            if (itemId == 1) {
+                Log.e("...", " Gotowe do odbioru")
+
+                for (item in adapter.adapterItems)
+                {
+                    if(item.model.status == "W transporcie")
+                        changeOnReady(item, adapter.getAdapterPosition(item))
+                }
+            }
+
+            if (itemId == 2) {
+                Log.e("...", " W drodze")
+
+                for (item in adapter.adapterItems)
+                {
+                    if(item.model.status == "Do realizacji")
+                        changeOnTransport(item, adapter.getAdapterPosition(item))
+                }
+            }
         }
 
         orderManager
@@ -526,79 +549,41 @@ class Main2Activity : AppCompatActivity(), NavigationView.OnNavigationItemSelect
                 this::handleTokenCacheError
             )
             .addTo(disposables)
-
-
-
-        //region Hamburger menu
-
-//        val toggle = ActionBarDrawerToggle(
-//            this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
-//        )
-//        drawer_layout.addDrawerListener(toggle)
-//        toggle.syncState()
-//
-//        nav_view.setNavigationItemSelectedListener(this)
-
-        //endregion
     }
 
-    override fun onBackPressed() {
-        //region Hamburger menu
-//        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-//            drawer_layout.closeDrawer(GravityCompat.START)
-//        } else {
-//            super.onBackPressed()
-//        }
-        //endregion
-        super.onBackPressed()
-    }
 
     //region Kropki góry róg
 
-//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        menuInflater.inflate(R.menu.main2, menu)
-//        return true
-//    }
-//
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        when (item.itemId) {
-//            R.id.action_settings -> return true
-//            else -> return super.onOptionsItemSelected(item)
-//        }
-//    }
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        menuInflater.inflate(R.menu.main2, menu)
+        return true
+    }
 
-    //endregion
-
-    //region Hamburger menu
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
         when (item.itemId) {
-            R.id.nav_camera -> {
-                // Handle the camera action
+            R.id.action_settings -> {
+                orderManager.removeToken()
+                val intent = Intent(this, Login::class.java)
+                startActivity(intent)
+                finish()
+                return true
             }
-            R.id.nav_gallery -> {
-
-            }
-            R.id.nav_slideshow -> {
-
-            }
-            R.id.nav_manage -> {
-
-            }
-            R.id.nav_share -> {
-
-            }
-            R.id.nav_send -> {
-
+            else -> {
+                orderManager
+                    .getToken()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                        this::handleTokenCacheSuccess,
+                        this::handleTokenCacheError
+                    )
+                    .addTo(disposables)
+                return super.onOptionsItemSelected(item)
             }
         }
-
-        drawer_layout.closeDrawer(GravityCompat.START)
-        return true
     }
 
     //endregion

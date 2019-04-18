@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.util.Log
+import android.widget.TextView
 import android.widget.Toast
 import com.example.mrkanapka_sprzedawca.R
 import com.example.mrkanapka_sprzedawca.api.ApiClient
@@ -35,6 +37,7 @@ class Login : Activity() {
     private var passwordInput: String = ""
 
     private fun handleTokenCacheSuccess(token: TokenEntity) {
+        dialog.show()
         val intent = Intent(this, Main2Activity::class.java)
         startActivity(intent)
         finish()
@@ -44,11 +47,21 @@ class Login : Activity() {
         Log.e("...","brak tokenu")
     }
 
+    private lateinit var dialog: AlertDialog
+
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
         setTheme(R.style.AppTheme_NoActionBar)
+
+        val builder = AlertDialog.Builder(this)
+        val dialogView = layoutInflater.inflate(R.layout.progress_dialog, null)
+        val message = dialogView.findViewById<TextView>(R.id.textDialog)
+        message.text = "Sprawdzanie danych logowania..."
+        builder.setView(dialogView)
+        builder.setCancelable(false)
+        dialog = builder.create()
 
         orderManager
             .getToken()
@@ -60,6 +73,7 @@ class Login : Activity() {
             .addTo(disposables)
 
         login_button.setOnClickListener {
+            dialog.show()
             loginInput = login_text.text.toString().trim()
             passwordInput = password_text.text.toString().trim()
             apiService.login(RequestLogin(loginInput, passwordInput))
@@ -70,20 +84,29 @@ class Login : Activity() {
                     onNext = {
                         if (it.message == "Niepoprawne dane logowania")
                         {
+                            dialog.cancel()
                             Toast.makeText(applicationContext,it.message, Toast.LENGTH_LONG).show()
                         } else{
                             orderManager.saveToken(it.message, it.id_seller)
                             Log.e("...",it.id_seller.toString())
+                            dialog.cancel()
                             val intent = Intent(this, Main2Activity::class.java)
                             startActivity(intent)
                             finish()
                         }
                     },
                     onError = {
-                        if (it is HttpException)
+                        if (it is HttpException){
                             Toast.makeText(applicationContext,it.message(), Toast.LENGTH_LONG).show()
+                            dialog.cancel()
+                        }
+
                         else
+                        {
                             Toast.makeText(applicationContext,"Sprawdź połączenie z internetem", Toast.LENGTH_LONG).show()
+                            dialog.cancel()
+                        }
+
                     }
                 )
         }
