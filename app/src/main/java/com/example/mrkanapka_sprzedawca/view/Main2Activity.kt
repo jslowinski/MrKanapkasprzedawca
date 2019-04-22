@@ -65,6 +65,8 @@ class Main2Activity : AppCompatActivity() {
 
     private var token = ""
 
+    private var idsellera = 0
+
     private val disposables: CompositeDisposable = CompositeDisposable()
 
     private lateinit var mHandler: Handler
@@ -194,7 +196,7 @@ class Main2Activity : AppCompatActivity() {
 
         //From api
         orderManager
-            .downloadOrders("delivery/37/$id$date", date, id)
+            .downloadOrders("delivery/$idsellera/$id$date", date, id)
             .andThen(orderManager.getOrders(date, id))
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { showProgress() } //funkcje np progressbar show
@@ -307,7 +309,7 @@ class Main2Activity : AppCompatActivity() {
                 //From api
 
                 orderManager
-                    .downloadData("delivery/" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
+                    .downloadData("delivery/" + idsellera + "/" + destination[position].id_destination, destination[position].id_destination)
                     .andThen(orderManager.getData(destination[position].id_destination))
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe {  } //funkcje np progressbar show
@@ -345,7 +347,7 @@ class Main2Activity : AppCompatActivity() {
                 //From api
 
                 orderManager
-                    .downloadData("delivery/" + 37 + "/" + destination[position].id_destination, destination[position].id_destination)
+                    .downloadData("delivery/" + idsellera + "/" + destination[position].id_destination, destination[position].id_destination)
                     .andThen(orderManager.getData(destination[position].id_destination))
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe {  } //funkcje np progressbar show
@@ -473,6 +475,8 @@ class Main2Activity : AppCompatActivity() {
 
     private fun handleTokenCacheSuccess(token: TokenEntity) {
         this.token = token.token
+        this.idsellera = token.id_seller
+        Log.e("...", token.id_seller.toString())
         orderManager
             .getDestination() //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
             .observeOn(AndroidSchedulers.mainThread())
