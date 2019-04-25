@@ -17,11 +17,12 @@
             android:usesCleartextTraffic="true"
             tools:ignore="GoogleAppIndexingWarning"
             tools:replace="android:icon,android:theme">
+        <activity android:name=".view.ProductActivity">
+        </activity>
         <activity
                 android:name=".view.Login"
                 android:theme="@style/AppTheme.Launcher"
-                android:windowSoftInputMode="adjustResize"
-        >
+                android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

@@ -3,11 +3,10 @@ package com.example.mrkanapka_sprzedawca.view
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Handler
-import android.support.design.widget.NavigationView
-import android.support.v4.view.GravityCompat
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentPagerAdapter
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DefaultItemAnimator
 import android.support.v7.widget.LinearLayoutManager
@@ -90,14 +89,7 @@ class Main2Activity : AppCompatActivity() {
             string += "" + item.date + "\n"
         }
 //        text3.text = string
-        Log.e("...", "date z api")
-        if (date.isEmpty()) {
-            Log.e("...","pusto")
-        }
-        else {
-            Log.e("...",date[0].date)
-            setCalendarDate(id, date[0].date, date[date.size-1].date)
-        }
+        setCalendarDate(id)
     }
 
     private fun handleFetchDataCacheSuccess(date: List<DateEntity>, id: Int) {
@@ -107,19 +99,12 @@ class Main2Activity : AppCompatActivity() {
 
         }
 //        text4.text = string
-        Log.e("...", "date z cache")
-        if (date.isEmpty()) {
-            Log.e("...","pusto")
-        }
-        else {
-            Log.e("...",date[0].date)
-            setCalendarDate(id, date[0].date, date[date.size-1].date)
-        }
+        setCalendarDate(id)
 
     }
 
     @SuppressLint("SimpleDateFormat")
-    private fun setCalendarDate(id: Int, maxdate: String, mindate: String){
+    private fun setCalendarDate(id: Int){
         //region Calendar
         val sdf = SimpleDateFormat("yyyy-MM-dd")
         val c = Calendar.getInstance()
@@ -157,17 +142,6 @@ class Main2Activity : AppCompatActivity() {
                 getOrder("/$yearS-$monthS-$dayS", id)
             }, year, month, day)
 
-            var date = sdf.parse(mindate)
-
-            var millis = date.time
-            dpd.datePicker.minDate = millis
-            dpd.datePicker
-
-            date = sdf.parse(maxdate)
-            millis = date.time
-            dpd.datePicker.maxDate = millis
-
-
             dpd.show()
         }
         mHandler = Handler()
@@ -179,10 +153,12 @@ class Main2Activity : AppCompatActivity() {
         }
 
         getOrder("/$yearS-$monthS-$dayS", id)
+        textView3.text = "Lista zamówień na dzień: $yearS-$monthS-$dayS"
         //endregion
     }
 
     private fun getOrder(date: String, id: Int){
+
         orderManager
             .getOrders(date, id) //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
             .observeOn(AndroidSchedulers.mainThread())
@@ -523,6 +499,7 @@ class Main2Activity : AppCompatActivity() {
         menu.add("W drodze").setIcon(R.drawable.ic_notifications)
         fab.setMenu(menu)
 
+
         fab.addOnMenuItemClickListener { _, _, itemId ->
             if (itemId == 1) {
                 Log.e("...", " Gotowe do odbioru")
@@ -553,8 +530,15 @@ class Main2Activity : AppCompatActivity() {
                 this::handleTokenCacheError
             )
             .addTo(disposables)
-    }
 
+        productIcon.setOnClickListener {
+            val intent = Intent(this, ProductActivity::class.java)
+            intent.putExtra("token", token)
+            intent.putExtra("date","$yearS-$monthS-$dayS")
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
+        }
+    }
 
     //region Kropki góry róg
 

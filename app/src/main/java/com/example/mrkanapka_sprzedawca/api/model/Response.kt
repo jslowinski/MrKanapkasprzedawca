@@ -4,5 +4,6 @@ data class Response<T> (
     var count: Int,
     var destinations: T,
     var dates: T,
-    var orders: T
+    var orders: T,
+    var components: T
 )
