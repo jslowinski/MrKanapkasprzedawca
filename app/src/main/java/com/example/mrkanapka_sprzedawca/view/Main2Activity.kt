@@ -103,20 +103,18 @@ class Main2Activity : AppCompatActivity() {
 
     }
 
+    val c = Calendar.getInstance()
+    var year = c.get(Calendar.YEAR)
+    var month = c.get(Calendar.MONTH)
+    var day = c.get(Calendar.DAY_OF_MONTH)
+    val sdf2 = SimpleDateFormat("dd/MM/yyyy")
+    val currentDate = sdf2.format(c.timeInMillis)
+    val splitDate = currentDate.split("/")
+
     @SuppressLint("SimpleDateFormat")
     private fun setCalendarDate(id: Int){
         //region Calendar
-        val sdf = SimpleDateFormat("yyyy-MM-dd")
-        val c = Calendar.getInstance()
-        var year = c.get(Calendar.YEAR)
-        var month = c.get(Calendar.MONTH)
-        var day = c.get(Calendar.DAY_OF_MONTH)
-        val sdf2 = SimpleDateFormat("dd/MM/yyyy")
-        val currentDate = sdf2.format(c.timeInMillis)
-        val splitDate = currentDate.split("/")
-        dayS = splitDate[0]
-        monthS = splitDate[1]
-        yearS = splitDate[2]
+
         calendarIcon.setOnClickListener{
             val dpd = DatePickerDialog(this,DatePickerDialog.OnDateSetListener { _, mYear, mMonth, mDay ->
                 day = mDay
@@ -147,13 +145,13 @@ class Main2Activity : AppCompatActivity() {
         mHandler = Handler()
         swpipeOrder.setOnRefreshListener {
             mRunnable = Runnable {
+                refreshSpinner()
                 getOrder("/$yearS-$monthS-$dayS", id)
             }
             mHandler.post(mRunnable)
         }
 
         getOrder("/$yearS-$monthS-$dayS", id)
-        textView3.text = "Lista zamówień na dzień: $yearS-$monthS-$dayS"
         //endregion
     }
 
@@ -182,7 +180,7 @@ class Main2Activity : AppCompatActivity() {
                 this::handleFetchOrderError
             )
             .addTo(disposables)
-        initializeRecyclerView()
+
 
     }
 
@@ -194,6 +192,7 @@ class Main2Activity : AppCompatActivity() {
 //        text4.text = throwable.message
     }
 
+    @SuppressLint("SetTextI18n")
     private fun handleFetchOrderSuccess(orders: List<OrderEntity>) {
         var string = "### API\n"
         for (item in orders) {
@@ -204,11 +203,26 @@ class Main2Activity : AppCompatActivity() {
             OrderListItem(it)
         }
 
+        if(orders.isEmpty()){
+            ordersList.visibility = View.GONE
+            ordersEmpty.visibility = View.VISIBLE
+            emptyText1.text = "Brak zamówień do wybranego biurowca/firmy na dzień $dayS-$monthS-$yearS. Datę możesz zmienić klikając ikonkę kalendarza."
+        } else
+        {
+            ordersList.visibility = View.VISIBLE
+            ordersEmpty.visibility = View.GONE
+            if (orders.size == 1) {
+                textView3.text = "${orders.size} zamówienie na dzień: $yearS-$monthS-$dayS"
+            } else {
+                textView3.text = "${orders.size} zamówień na dzień: $yearS-$monthS-$dayS"
+            }
+        }
         Log.e("...", "orders z api")
         adapter.setNewList(items)
 
     }
 
+    @SuppressLint("SetTextI18n")
     private fun handleFetchOrderCacheSuccess(orders: List<OrderEntity>) {
         var string = "### CACHE\n"
         for (item in orders) {
@@ -217,6 +231,21 @@ class Main2Activity : AppCompatActivity() {
 //        text6.text = string
         val items = orders.map {
             OrderListItem(it)
+        }
+
+        if(orders.isEmpty()){
+            ordersList.visibility = View.GONE
+            ordersEmpty.visibility = View.VISIBLE
+            emptyText1.text = "Brak zamówień do wybranego biurowca/firmy na dzień $dayS-$monthS-$yearS. Datę możesz zmienić klikając ikonkę kalendarza."
+        } else
+        {
+            ordersList.visibility = View.VISIBLE
+            ordersEmpty.visibility = View.GONE
+            if (orders.size == 1) {
+                textView3.text = "${orders.size} zamówienie na dzień: $yearS-$monthS-$dayS"
+            } else {
+                textView3.text = "${orders.size} zamówień na dzień: $yearS-$monthS-$dayS"
+            }
         }
         Log.e("...", "orders z cache")
         adapter.setNewList(items)
@@ -243,6 +272,10 @@ class Main2Activity : AppCompatActivity() {
 //        text1.text = string
         Log.e("...", "destination z api")
         setOfficeSpinner(myDestination,destinations)
+        val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
+        val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
+        officeSpinner.adapter = adapterSpinner
+        officeSpinner.setSelection(spinnerPos,false)
 
     }
 
@@ -259,13 +292,25 @@ class Main2Activity : AppCompatActivity() {
 //        text2.text = string
     }
 
+    private fun refreshSpinner(){
+        orderManager
+            .downloadDestination("delivery/" + idsellera)
+            .andThen(orderManager.getDestination())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe {  } //funkcje np progressbar show
+            .doFinally {  } //funkcje np progressbar show
+            .subscribe(
+                {handleFetchDestinationSuccess(it)},
+                {handleFetchDestinationError(it)}
+            )
+            .addTo(disposables)
+    }
+
+    var spinnerPos = 0
     private fun setOfficeSpinner(myDestination: ArrayList<String>, destination: List<DestinationsEntity>){
         val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
         val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
         officeSpinner.adapter = adapterSpinner
-
-//        officeSpinner.setSelection(0,false) //nie wywołuje z cache automatycznie | 2x zamiast 4x normalnie
-
         officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 Log.e("...", " Nothing")
@@ -273,6 +318,7 @@ class Main2Activity : AppCompatActivity() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
 //                Toast.makeText(applicationContext,destination[position].name, Toast.LENGTH_LONG).show()
+                spinnerPos = position
                 orderManager
                     .getData(destination[position].id_destination) //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
                     .observeOn(AndroidSchedulers.mainThread())
@@ -296,45 +342,6 @@ class Main2Activity : AppCompatActivity() {
                     )
                     .addTo(disposables)
             }
-        }
-    }
-
-    private fun setOfficeSpinnerCache(myDestination: ArrayList<String>, destination: List<DestinationsEntity>){
-        val officeSpinner: Spinner = findViewById(R.id.destinationSpinner)
-        val adapterSpinner = ArrayAdapter(this, R.layout.spinner_item, myDestination)
-        officeSpinner.adapter = adapterSpinner
-        officeSpinner.setSelection(0,false)
-        officeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                Log.e("...", " Nothing")
-            }
-
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                Toast.makeText(applicationContext,destination[position].name, Toast.LENGTH_LONG).show()
-                orderManager
-                    .getData(destination[position].id_destination) //w domysle id_destination klienta ktore powinno byc pobierane z api włącznie z tokenem
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        {handleFetchDataCacheSuccess(it,destination[position].id_destination)},
-                        {handleFetchDataCacheError(it)}
-                    )
-                    .addTo(disposables)
-
-                //From api
-
-                orderManager
-                    .downloadData("delivery/" + idsellera + "/" + destination[position].id_destination, destination[position].id_destination)
-                    .andThen(orderManager.getData(destination[position].id_destination))
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnSubscribe {  } //funkcje np progressbar show
-                    .doFinally {  } //funkcje np progressbar show
-                    .subscribe(
-                        {handleFetchDataSuccess(it,destination[position].id_destination)},
-                        {handleFetchDataError(it)}
-                    )
-                    .addTo(disposables)
-            }
-
         }
     }
 
@@ -522,6 +529,10 @@ class Main2Activity : AppCompatActivity() {
             }
         }
 
+        dayS = splitDate[0]
+        monthS = splitDate[1]
+        yearS = splitDate[2]
+
         orderManager
             .getToken()
             .observeOn(AndroidSchedulers.mainThread())
@@ -530,6 +541,8 @@ class Main2Activity : AppCompatActivity() {
                 this::handleTokenCacheError
             )
             .addTo(disposables)
+
+        initializeRecyclerView()
 
         productIcon.setOnClickListener {
             val intent = Intent(this, ProductActivity::class.java)
@@ -552,27 +565,18 @@ class Main2Activity : AppCompatActivity() {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        when (item.itemId) {
+        return when (item.itemId) {
             R.id.action_settings -> {
                 orderManager.removeToken()
                 val intent = Intent(this, Login::class.java)
                 startActivity(intent)
                 finish()
-                return true
+                true
             }
             else -> {
-                orderManager
-                    .getToken()
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                        this::handleTokenCacheSuccess,
-                        this::handleTokenCacheError
-                    )
-                    .addTo(disposables)
-                return super.onOptionsItemSelected(item)
+                super.onOptionsItemSelected(item)
             }
         }
     }
-
     //endregion
 }
