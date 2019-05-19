@@ -17,6 +17,9 @@ data class OrderEntity(
     @ColumnInfo(name = "status")
     var status: String,
 
+    @ColumnInfo(name = "comment")
+    var comment: String,
+
     @ColumnInfo(name = "registrationid")
     var registrationid: String,
 
@@ -25,6 +28,7 @@ data class OrderEntity(
 
     @ColumnInfo(name = "id_destination")
     var id_destination: Int
+
 
 ) {
     @PrimaryKey(autoGenerate = true)

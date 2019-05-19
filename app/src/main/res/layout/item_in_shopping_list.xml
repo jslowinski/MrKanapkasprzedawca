@@ -25,8 +25,9 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginEnd="8dp"/>
+                android:layout_marginBottom="2dp" app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginTop="2dp" android:layout_marginStart="8dp"
+                app:layout_constraintStart_toStartOf="parent"/>
 
         <TextView
                 android:layout_width="wrap_content"
@@ -34,7 +35,7 @@
                 android:id="@+id/shoppingAmount"
                 app:layout_constraintTop_toTopOf="@+id/shoppingName"
                 app:layout_constraintBottom_toBottomOf="@+id/shoppingName"
-                app:layout_constraintStart_toEndOf="@+id/shoppingName" android:layout_marginStart="8dp"/>
+                app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"/>
 
     </android.support.constraint.ConstraintLayout>
 

@@ -48,6 +48,7 @@ class OrdersManager {
                     it.email,
                     it.order_number,
                     it.status,
+                    it.comment,
                     it.registrationid,
                     data,
                     id_destination

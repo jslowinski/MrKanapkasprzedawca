@@ -4,5 +4,6 @@ data class OrderDto (
     var email: String,
     var order_number: String,
     var status: String,
-    var registrationid: String
+    var registrationid: String,
+    var comment: String
 )

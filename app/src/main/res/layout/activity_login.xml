@@ -30,7 +30,7 @@
                 android:layout_marginTop="20dp"
                 android:textColorHint="#ffffff"
                 android:textColor="#ffffff"
-                android:drawableStart="@drawable/ic_email_black_24dp"
+                android:drawableStart="@drawable/ic_account_circle_black_24dp"
                 android:drawablePadding="10dp"
                 android:hint="Nazwa użytkownika"
                 android:layout_width="match_parent"

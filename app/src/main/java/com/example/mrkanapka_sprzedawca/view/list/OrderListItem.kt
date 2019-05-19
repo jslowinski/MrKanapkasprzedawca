@@ -7,6 +7,7 @@ import com.example.mrkanapka_sprzedawca.R
 import com.example.mrkanapka_sprzedawca.database.entity.OrderEntity
 import com.mikepenz.fastadapter.FastAdapter
 import com.mikepenz.fastadapter.items.ModelAbstractItem
+import org.w3c.dom.Text
 import java.util.Objects.hash
 
 class OrderListItem(model: OrderEntity) : ModelAbstractItem<OrderEntity, OrderListItem, OrderListItem.OrderListItemViewHolder>(model) {
@@ -32,6 +33,7 @@ class OrderListItem(model: OrderEntity) : ModelAbstractItem<OrderEntity, OrderLi
         private val nameText: TextView = itemView.findViewById(R.id.numberOrderTextView)
         private val emailText: TextView = itemView.findViewById(R.id.emailOrderTextView)
         private val statusText: TextView = itemView.findViewById(R.id.statusOrderTextView)
+        private val commentText: TextView = itemView.findViewById(R.id.commentOrder)
         private val button: Button = itemView.findViewById(R.id.button)
         private val button2: Button = itemView.findViewById(R.id.button2)
         override fun bindView(item: OrderListItem, payloads: MutableList<Any>) {
@@ -43,6 +45,11 @@ class OrderListItem(model: OrderEntity) : ModelAbstractItem<OrderEntity, OrderLi
             nameText.text = model.order_number
             emailText.text = model.email
             statusText.text = model.status
+            if (model.comment == "" || model.comment == "None") {
+                commentText.text = "Brak"
+            } else {
+                commentText.text = model.comment
+            }
             if (model.status == "Do realizacji") {
                 button.visibility = View.VISIBLE
                 button2.visibility = View.GONE
