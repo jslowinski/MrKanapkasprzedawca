@@ -74,17 +74,20 @@ class Main2Activity : AppCompatActivity() {
 
     private fun handleFetchDestinationError(throwable: Throwable) {
 //        text1.text = throwable.message
+        println("ERROR DEST API")
     }
 
     private fun handleFetchDestinationCacheError(throwable: Throwable) {
 //        text1.text = throwable.message
+        println("ERROR DEST CACHE")
     }
 
     private var dayS: String = ""
     private var monthS: String = ""
     private var yearS: String = ""
     private fun handleFetchDataSuccess(date: List<DateEntity>, id: Int) {
-        var string = "### API\n"
+        var string = "### API _ DATA\n"
+        println(string)
         for (item in date) {
             string += "" + item.date + "\n"
         }
@@ -93,7 +96,8 @@ class Main2Activity : AppCompatActivity() {
     }
 
     private fun handleFetchDataCacheSuccess(date: List<DateEntity>, id: Int) {
-        var string = "### CACHE\n"
+        var string = "### CACHE _ DATA\n"
+        println(string)
         for (item in date) {
             string += "" + item.id_destination + ":  " + item.date + "\n"
 
@@ -137,7 +141,7 @@ class Main2Activity : AppCompatActivity() {
                 }
                 yearS = "$mYear"
                 Log.e("...", "$yearS-$monthS-$dayS")
-                getOrder("/$yearS-$monthS-$dayS", id)
+                getOrder("$yearS-$monthS-$dayS", id)
             }, year, month, day)
 
             dpd.show()
@@ -146,12 +150,12 @@ class Main2Activity : AppCompatActivity() {
         swpipeOrder.setOnRefreshListener {
             mRunnable = Runnable {
                 refreshSpinner()
-                getOrder("/$yearS-$monthS-$dayS", id)
+                getOrder("$yearS-$monthS-$dayS", id)
             }
             mHandler.post(mRunnable)
         }
 
-        getOrder("/$yearS-$monthS-$dayS", id)
+        getOrder("$yearS-$monthS-$dayS", id)
         //endregion
     }
 
@@ -170,7 +174,7 @@ class Main2Activity : AppCompatActivity() {
 
         //From api
         orderManager
-            .downloadOrders("delivery/$idsellera/$id$date", date, id)
+            .downloadOrders("delivery/$idsellera/$id/$date", date, id)
             .andThen(orderManager.getOrders(date, id))
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe { showProgress() } //funkcje np progressbar show
@@ -194,10 +198,13 @@ class Main2Activity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun handleFetchOrderSuccess(orders: List<OrderEntity>) {
-        var string = "### API\n"
+        var string = "### API - ORDER\n"
+        println(string)
         for (item in orders) {
             string += "" + item.order_number + ": " + item.status + " " + item.email + "\n"
+
         }
+
 //        text5.text = string
         val items = orders.map {
             OrderListItem(it)
@@ -224,7 +231,8 @@ class Main2Activity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun handleFetchOrderCacheSuccess(orders: List<OrderEntity>) {
-        var string = "### CACHE\n"
+        var string = "### CACHE - ORDER\n"
+        println(string)
         for (item in orders) {
             string += "" + item.order_number + ": " + item.status + " " + item.email + "\n"
         }
@@ -253,10 +261,13 @@ class Main2Activity : AppCompatActivity() {
 
     private fun handleFetchOrderError(throwable: Throwable) {
 //        text5.text = throwable.message
+        println("ERROR FETCH API")
+        println(throwable.message)
     }
 
     private fun handleFetchOrderCacheError(throwable: Throwable) {
 //        text6.text = throwable.message
+        println("ERROR DEST CACHE")
     }
 
     lateinit var destinations: List<DestinationsEntity>
@@ -264,7 +275,8 @@ class Main2Activity : AppCompatActivity() {
     private fun handleFetchDestinationSuccess(destinations: List<DestinationsEntity>) {
         this.destinations = destinations
         val myDestination = ArrayList<String>()
-        var string = "### API\n"
+        var string = "### API - DEST\n"
+        println(string)
         for (item in destinations) {
             string += "" + item.id_destination + ":  " + item.name + "\n"
             myDestination.add(item.name)
@@ -281,7 +293,8 @@ class Main2Activity : AppCompatActivity() {
 
     private fun handleFetchDestinationCacheSuccess(destinations: List<DestinationsEntity>) {
         val myDestination = ArrayList<String>()
-        var string = "### CACHE\n"
+        var string = "### CACHE - DEST\n"
+        println(string)
         for (item in destinations) {
             string += "" + item.id_destination + ":  " + item.name + "\n"
             myDestination.add(item.name)
